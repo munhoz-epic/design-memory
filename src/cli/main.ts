@@ -20,7 +20,7 @@ program
   .description('Learn a design system from a URL or local image')
   .argument('<url>', 'URL to crawl and analyze (or local image path with --from-image)')
   .option('--api-key <key>', 'API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)')
-  .option('--model <model>', 'LLM model to use', 'gpt-4o-mini')
+  .option('--model <model>', 'LLM model to use (default: gpt-4o-mini / claude-haiku-4-5-20251001)')
   .option('--provider <provider>', 'LLM provider: openai or anthropic (auto-detected from env vars)')
   .option('--from-image', 'Learn from a local screenshot/image instead of a URL')
   .option('--pages <urls...>', 'Additional URLs to crawl (multi-page mode)')
@@ -45,7 +45,7 @@ program
   .argument('<a>', 'First URL')
   .argument('<b>', 'Second URL')
   .option('--api-key <key>', 'API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)')
-  .option('--model <model>', 'LLM model to use', 'gpt-4o-mini')
+  .option('--model <model>', 'LLM model to use (default: gpt-4o-mini / claude-haiku-4-5-20251001)')
   .option('--provider <provider>', 'LLM provider: openai or anthropic (auto-detected from env vars)')
   .option('--output <path>', 'Output path for the diff report', 'design-diff.md')
   .action(runDiffCommand);

@@ -4,6 +4,10 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { Logger } from 'loglevel';
 
+function stripMarkdownCodeBlock(text: string): string {
+  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+}
+
 export interface LLMConfig {
   apiKey: string;
   model?: string;
@@ -52,7 +56,7 @@ CRITICAL:
     });
     const block = response.content[0];
     if (!block || block.type !== 'text') throw new Error('Unexpected Anthropic response type');
-    content = block.text;
+    content = stripMarkdownCodeBlock(block.text);
   } else {
     const client = new OpenAI({ apiKey: config.apiKey });
     const response = await client.chat.completions.create({

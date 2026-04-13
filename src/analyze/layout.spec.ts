@@ -9,6 +9,10 @@ import { fixLayoutSpec } from './layout.spec.fix.js';
 import { layoutSpecSchema } from './layout.spec.schema.js';
 
 export type { LayoutSpec, LayoutSection } from './layout.spec.schema.js';
+
+function stripMarkdownCodeBlock(text: string): string {
+  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+}
 export { layoutSpecSchema } from './layout.spec.schema.js';
 
 const SYSTEM_PROMPT = `You are a design system expert. Analyze the webpage screenshot and create a detailed layout specification in JSON format that any LLM can use to recreate this design.
@@ -38,7 +42,7 @@ export async function analyzeLayoutSpec(
     const client = new Anthropic({ apiKey: config.apiKey });
     const response = await client.messages.create({
       model: config.model ?? 'claude-haiku-4-5-20251001',
-      max_tokens: 2500,
+      max_tokens: 8192,
       system: SYSTEM_PROMPT + '\n\nReturn only valid JSON. No markdown, no code blocks.',
       messages: [
         {
@@ -59,7 +63,7 @@ export async function analyzeLayoutSpec(
     });
     const block = response.content[0];
     if (!block || block.type !== 'text') throw new Error('Unexpected Anthropic response type');
-    content = block.text;
+    content = stripMarkdownCodeBlock(block.text);
   } else {
     const client = new OpenAI({ apiKey: config.apiKey });
     const response = await client.chat.completions.create({
