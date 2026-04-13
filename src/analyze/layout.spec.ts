@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
+import sharp from 'sharp';
 import type { ScreenshotResult } from '../acquire/screenshots.js';
 import type { LLMConfig } from '../interpret/llm.client.js';
 import type { Logger } from 'loglevel';
@@ -7,6 +8,20 @@ import { z } from 'zod';
 import { buildLayoutSpecPrompt } from './layout.spec.prompt.js';
 import { fixLayoutSpec } from './layout.spec.fix.js';
 import { layoutSpecSchema } from './layout.spec.schema.js';
+
+const ANTHROPIC_MAX_PX = 7900; // Anthropic hard limit is 8000px per dimension
+
+async function resizeForAnthropic(buffer: Buffer): Promise<Buffer> {
+  const meta = await sharp(buffer).metadata();
+  const w = meta.width ?? 0;
+  const h = meta.height ?? 0;
+  if (w <= ANTHROPIC_MAX_PX && h <= ANTHROPIC_MAX_PX) return buffer;
+  const ratio = Math.min(ANTHROPIC_MAX_PX / w, ANTHROPIC_MAX_PX / h);
+  return sharp(buffer)
+    .resize(Math.floor(w * ratio), Math.floor(h * ratio))
+    .png()
+    .toBuffer();
+}
 
 export type { LayoutSpec, LayoutSection } from './layout.spec.schema.js';
 
@@ -40,6 +55,8 @@ export async function analyzeLayoutSpec(
 
   if (config.provider === 'anthropic') {
     const client = new Anthropic({ apiKey: config.apiKey });
+    const resizedBuffer = await resizeForAnthropic(screenshot.buffer);
+    const base64Resized = resizedBuffer.toString('base64');
     const response = await client.messages.create({
       model: config.model ?? 'claude-haiku-4-5-20251001',
       max_tokens: 8192,
@@ -54,7 +71,7 @@ export async function analyzeLayoutSpec(
               source: {
                 type: 'base64',
                 media_type: 'image/png',
-                data: base64Image,
+                data: base64Resized,
               },
             },
           ],
