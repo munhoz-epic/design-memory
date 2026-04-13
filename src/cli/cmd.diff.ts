@@ -16,16 +16,23 @@ export async function runDiffCommand(
   options?: {
     apiKey?: string;
     model?: string;
+    provider?: string;
     output?: string;
   }
 ): Promise<void> {
   const spinner = ora(chalk.cyan(`Diffing design systems...`)).start();
 
   try {
-    const apiKey = options?.apiKey ?? process.env.OPENAI_API_KEY;
+    const provider = (options?.provider ??
+      (process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai')) as 'openai' | 'anthropic';
+    const apiKey =
+      options?.apiKey ??
+      (provider === 'anthropic' ? process.env.ANTHROPIC_API_KEY : process.env.OPENAI_API_KEY);
     if (!apiKey) {
       spinner.fail(
-        chalk.red('OpenAI API key required (--api-key, OPENAI_API_KEY env var, or .env file)')
+        chalk.red(
+          'API key required (--api-key, ANTHROPIC_API_KEY or OPENAI_API_KEY env var, or .env file)'
+        )
       );
       process.exit(1);
     }
@@ -33,7 +40,7 @@ export async function runDiffCommand(
     const logger = defaultLogger;
     logger.setLevel('error');
 
-    const llmConfig: LLMConfig = { apiKey, model: options?.model, temperature: 0.2 };
+    const llmConfig: LLMConfig = { apiKey, model: options?.model, temperature: 0.2, provider };
 
     // Acquire & analyze both sites in parallel
     spinner.text = chalk.cyan(`Acquiring ${chalk.yellow(a)} and ${chalk.yellow(b)} in parallel...`);

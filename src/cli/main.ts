@@ -19,8 +19,9 @@ program
   .command('learn')
   .description('Learn a design system from a URL or local image')
   .argument('<url>', 'URL to crawl and analyze (or local image path with --from-image)')
-  .option('--api-key <key>', 'OpenAI API key (or set OPENAI_API_KEY env var or .env file)')
-  .option('--model <model>', 'OpenAI model to use', 'gpt-4o-mini')
+  .option('--api-key <key>', 'API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)')
+  .option('--model <model>', 'LLM model to use', 'gpt-4o-mini')
+  .option('--provider <provider>', 'LLM provider: openai or anthropic (auto-detected from env vars)')
   .option('--from-image', 'Learn from a local screenshot/image instead of a URL')
   .option('--pages <urls...>', 'Additional URLs to crawl (multi-page mode)')
   .option('--no-cache', 'Skip crawl cache and re-acquire from scratch')
@@ -43,8 +44,9 @@ program
   .description('Compare design systems of two URLs')
   .argument('<a>', 'First URL')
   .argument('<b>', 'Second URL')
-  .option('--api-key <key>', 'OpenAI API key (or set OPENAI_API_KEY env var or .env file)')
-  .option('--model <model>', 'OpenAI model to use', 'gpt-4o-mini')
+  .option('--api-key <key>', 'API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)')
+  .option('--model <model>', 'LLM model to use', 'gpt-4o-mini')
+  .option('--provider <provider>', 'LLM provider: openai or anthropic (auto-detected from env vars)')
   .option('--output <path>', 'Output path for the diff report', 'design-diff.md')
   .action(runDiffCommand);
 

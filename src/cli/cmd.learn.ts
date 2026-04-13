@@ -16,6 +16,7 @@ export async function runLearnCommand(
   options: {
     apiKey?: string;
     model?: string;
+    provider?: string;
     fromImage?: boolean;
     pages?: string[];
     noCache?: boolean;
@@ -26,9 +27,15 @@ export async function runLearnCommand(
   const progress = createProgress(totalSteps);
 
   try {
-    const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
+    const provider = (options.provider ??
+      (process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai')) as 'openai' | 'anthropic';
+    const apiKey =
+      options.apiKey ??
+      (provider === 'anthropic' ? process.env.ANTHROPIC_API_KEY : process.env.OPENAI_API_KEY);
     if (!apiKey) {
-      progress.fail('OpenAI API key required (--api-key, OPENAI_API_KEY env var, or .env file)');
+      progress.fail(
+        'API key required (--api-key, ANTHROPIC_API_KEY or OPENAI_API_KEY env var, or .env file)'
+      );
       process.exit(1);
     }
 
@@ -71,6 +78,7 @@ export async function runLearnCommand(
         apiKey,
         model: options.model,
         temperature: 0.2,
+        provider,
       },
       logger
     );
@@ -78,7 +86,11 @@ export async function runLearnCommand(
     progress.step('Analyzing layout with vision AI');
     const layoutSpec = await analyzeLayoutSpec(
       bundle.screenshot,
-      { apiKey, model: options.model ?? 'gpt-4o' },
+      {
+        apiKey,
+        model: options.model ?? (provider === 'anthropic' ? 'claude-haiku-4-5-20251001' : 'gpt-4o'),
+        provider,
+      },
       logger
     );
 
