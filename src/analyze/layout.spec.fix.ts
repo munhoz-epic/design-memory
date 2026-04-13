@@ -83,6 +83,23 @@ export function fixLayoutSpec(
           s.position.horizontal = 'full-width';
         }
       }
+      // Fix content: ensure it's an object and items are strings
+      const raw = s as Record<string, unknown>;
+      if (!raw.content || typeof raw.content !== 'object') {
+        raw.content = {};
+      }
+      const content = raw.content as Record<string, unknown>;
+      if (content.items && Array.isArray(content.items)) {
+        content.items = (content.items as unknown[]).map((item) => {
+          if (typeof item === 'string') return item;
+          if (item && typeof item === 'object') {
+            const obj = item as Record<string, unknown>;
+            return String(obj.text ?? obj.label ?? obj.name ?? obj.title ?? JSON.stringify(item));
+          }
+          return String(item);
+        });
+      }
+
       if (s.type) {
         const validTypes = [
           'header',
